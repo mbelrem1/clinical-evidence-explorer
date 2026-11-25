@@ -1,0 +1,419 @@
+<!--
+THESIS: A clinical evidence timetable makes every study's population, intervention, outcome, source, and review state legible together.
+OWN-WORLD: Carbon, warm ivory, and a goldenrod light bed; ruled acetate study rows, narrow source rails, compact codes, and vermilion review marks.
+STORY: Researchers refine a PICO question in Scoping, then freeze an exact local query into a distinct, dual-review PRISMA-style workflow.
+FIRST VIEWPORT: A persistent carbon navigation rail frames a light-table workspace; the PICO builder sits above a ruled study ledger, with the frozen-review action aligned to the results heading.
+FORM: Evidence Timetable, an evidence-first operating surface derived from pocket timetable and light-table indexing; the schedule stays readable at every width.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#172124">
+    <meta name="description" content="Search PubMed and ClinicalTrials.gov, review records, and prepare evidence screening workflows.">
+    <title>Clinical Evidence Explorer</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to workspace</a>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Application navigation">
+        <a class="brand" href="#" aria-label="Clinical Evidence Explorer home">
+          <span class="brand-mark" aria-hidden="true">CE</span>
+          <span class="brand-name">Clinical Evidence<span>Explorer</span></span>
+        </a>
+
+        <div class="side-section-label">WORKSPACE</div>
+        <nav class="primary-nav" aria-label="Workspace">
+          <button class="nav-item is-active" data-view="search" type="button">
+            <span class="nav-icon" aria-hidden="true">⌕</span>
+            <span>Evidence search</span>
+            <span class="nav-shortcut">01</span>
+          </button>
+          <button class="nav-item" data-view="screening" type="button" disabled aria-describedby="screening-nav-help">
+            <span class="nav-icon nav-icon--screen" aria-hidden="true">□</span>
+            <span>Dual screening</span>
+            <span class="nav-shortcut" id="screening-count">—</span>
+          </button>
+          <span class="sr-only" id="screening-nav-help">Freeze a search to open the PRISMA-style review.</span>
+          <button class="nav-item" data-view="extraction" type="button" disabled aria-describedby="extraction-nav-help">
+            <span class="nav-icon nav-icon--extract" aria-hidden="true">↳</span>
+            <span>Data extraction</span>
+            <span class="nav-shortcut">03</span>
+          </button>
+          <span class="sr-only" id="extraction-nav-help">Start a review and reach consensus on an included study first.</span>
+        </nav>
+
+        <div class="sidebar-divider"></div>
+        <div class="side-section-label">SOURCES</div>
+        <div class="source-connection">
+          <span class="source-dot" aria-hidden="true"></span>
+          <span><strong>PubMed</strong><small>Live search API</small></span>
+          <span class="source-lock" aria-label="Live source">↗</span>
+        </div>
+        <div class="source-connection">
+          <span class="source-dot source-dot--trial" aria-hidden="true"></span>
+          <span><strong>ClinicalTrials.gov</strong><small>Live registry API</small></span>
+          <span class="source-lock" aria-label="Live source">↗</span>
+        </div>
+        <div class="source-connection source-connection--scopus">
+          <span class="source-dot source-dot--scopus" aria-hidden="true"></span>
+          <span><strong>Scopus</strong><small>CSV export import</small></span>
+          <span class="source-lock" aria-label="Import source">↓</span>
+        </div>
+
+        <div class="sidebar-spacer"></div>
+        <div class="local-status">
+          <span class="local-status-light" aria-hidden="true"></span>
+          <span><strong>Browser workspace</strong><small>Reviews stay in this browser</small></span>
+        </div>
+        <div class="owner-card">
+          <span class="owner-avatar" aria-hidden="true">ME</span>
+          <span><strong>Dr Mohammed Elbeltagi</strong><small>Workspace owner</small></span>
+        </div>
+      </aside>
+
+      <div class="workspace">
+        <header class="topbar">
+          <div class="topbar-context">
+            <span class="breadcrumb-root">Research workspace</span>
+            <span class="breadcrumb-separator" aria-hidden="true">/</span>
+            <span id="topbar-current">Evidence search</span>
+          </div>
+          <div class="topbar-actions">
+            <span class="local-pill" id="workspace-status"><span aria-hidden="true"></span> SOURCE SEARCH</span>
+            <button class="icon-button" id="help-button" type="button" aria-label="About this prototype" title="About this prototype">i</button>
+          </div>
+        </header>
+
+        <main id="main-content" tabindex="-1">
+          <div class="mode-row">
+            <div class="mode-copy">
+              <span class="mode-overline">RESEARCH MODE</span>
+              <p id="mode-description">Explore the evidence set, adjust your question, and inspect promising records.</p>
+            </div>
+            <div class="mode-switch" role="tablist" aria-label="Research mode">
+              <button class="mode-tab is-active" id="mode-scoping" role="tab" aria-selected="true" aria-controls="view-search" type="button" data-mode="scoping">
+                <span class="mode-tab-mark" aria-hidden="true">↗</span>
+                <span>Scoping</span>
+                <small>Explore</small>
+              </button>
+              <button class="mode-tab" id="mode-prisma" role="tab" aria-selected="false" aria-controls="view-screening" type="button" data-mode="prisma">
+                <span class="mode-tab-mark" aria-hidden="true">▤</span>
+                <span>PRISMA review</span>
+                <small id="prisma-tab-status">Not started</small>
+              </button>
+            </div>
+          </div>
+
+          <section class="view is-visible" id="view-search" aria-labelledby="search-title">
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">PICO QUESTION BUILDER</p>
+                <h1 id="search-title" tabindex="-1">Find the evidence that fits.</h1>
+                <p class="heading-copy">Shape a focused question. Start broad, then tighten population and intervention criteria.</p>
+              </div>
+              <div class="heading-actions">
+                <button class="button button--quiet" id="reset-search" type="button">Reset question</button>
+              </div>
+            </div>
+
+            <div class="search-workbench">
+              <form class="pico-form" id="pico-form">
+                <div class="pico-grid">
+                  <label class="pico-field pico-field--population" for="pico-population">
+                    <span class="pico-label"><span class="pico-letter">P</span> Population</span>
+                    <textarea id="pico-population" name="population" rows="2" required aria-describedby="population-help"></textarea>
+                    <span class="field-help" id="population-help">Who are you studying?</span>
+                  </label>
+                  <label class="pico-field pico-field--intervention" for="pico-intervention">
+                    <span class="pico-label"><span class="pico-letter">I</span> Intervention</span>
+                    <textarea id="pico-intervention" name="intervention" rows="2" required aria-describedby="intervention-help"></textarea>
+                    <span class="field-help" id="intervention-help">What treatment or exposure?</span>
+                  </label>
+                  <label class="pico-field pico-field--comparator" for="pico-comparator">
+                    <span class="pico-label"><span class="pico-letter">C</span> Comparator</span>
+                    <textarea id="pico-comparator" name="comparator" rows="2" aria-describedby="comparator-help"></textarea>
+                    <span class="field-help" id="comparator-help">Compared with what?</span>
+                  </label>
+                  <label class="pico-field pico-field--outcome" for="pico-outcome">
+                    <span class="pico-label"><span class="pico-letter">O</span> Outcome</span>
+                    <textarea id="pico-outcome" name="outcome" rows="2" aria-describedby="outcome-help"></textarea>
+                    <span class="field-help" id="outcome-help">Which result matters?</span>
+                  </label>
+                </div>
+                <div class="search-options">
+                  <label class="select-field" for="age-filter">
+                    <span class="option-label">Age group</span>
+                    <select id="age-filter" name="age">
+                      <option value="all">All adults</option>
+                      <option value="50">50 years and older</option>
+                      <option value="60">60 years and older</option>
+                      <option value="65" selected>65 years and older</option>
+                      <option value="70">70 years and older</option>
+                    </select>
+                  </label>
+                  <label class="toggle-control" for="strict-age">
+                    <input id="strict-age" type="checkbox">
+                    <span class="toggle-track" aria-hidden="true"><span></span></span>
+                    <span><strong>Exact age match</strong><small>Flag mixed-age cohorts for review when off</small></span>
+                  </label>
+                  <label class="toggle-control toggle-control--compact" for="exact-intervention">
+                    <input id="exact-intervention" type="checkbox">
+                    <span class="toggle-track" aria-hidden="true"><span></span></span>
+                    <span><strong>Exact intervention</strong><small>Require a phrase match</small></span>
+                  </label>
+                  <div class="source-options" aria-label="Live databases to search">
+                    <span class="option-label">Search sources</span>
+                    <label><input id="source-pubmed" type="checkbox" checked> PubMed</label>
+                    <label><input id="source-trials" type="checkbox" checked> ClinicalTrials.gov</label>
+                  </div>
+                  <button class="button button--primary search-submit" id="search-live" type="submit">
+                    <span aria-hidden="true">⌕</span> Search live sources
+                  </button>
+                  <label class="button button--quiet scopus-import-button" for="scopus-import">Import Scopus CSV</label>
+                  <input class="sr-only" id="scopus-import" type="file" accept=".csv,text/csv">
+                  <button class="text-button demo-load-button" id="load-demo-data" type="button">Try sample data</button>
+                </div>
+                <div class="search-method-note">
+                  <span class="note-mark" aria-hidden="true">i</span>
+                  <span>Live source queries use the entered PICO concepts. Age eligibility and study relevance require human verification; no semantic ranking or automatic extraction is used.</span>
+                  <span class="method-token">DIRECT SOURCE SEARCH</span>
+                </div>
+              </form>
+            </div>
+
+            <div class="results-heading">
+              <div class="results-title-group">
+                <div>
+                  <p class="eyebrow">SCOPING RESULTS</p>
+                  <h2 id="results-heading">Evidence ledger <span id="results-count" class="count-mark">0</span></h2>
+                </div>
+                <span class="demo-stamp" id="dataset-stamp"><span aria-hidden="true">✳</span> Synthetic sample</span>
+              </div>
+              <button class="button button--freeze" id="freeze-review" type="button">
+                Freeze search for PRISMA review <span aria-hidden="true">→</span>
+              </button>
+            </div>
+
+            <div class="results-toolbar">
+              <div class="results-toolbar-left">
+                <span class="results-summary" id="results-summary" aria-live="polite"></span>
+                <span class="toolbar-separator" aria-hidden="true"></span>
+                <button class="text-button" type="button" id="manual-filter" aria-pressed="false">Needs manual review <span id="manual-filter-count">0</span></button>
+              </div>
+              <div class="sort-status" id="sort-status"><span class="sort-glyph" aria-hidden="true">↕</span> Synthetic sample · fixed order</div>
+            </div>
+
+            <div class="study-list" id="study-list" aria-live="polite"></div>
+            <div class="load-more-row" id="load-more-row" hidden>
+              <button class="button button--quiet" id="load-more-results" type="button">Load next source page</button>
+              <span id="load-more-status" role="status"></span>
+            </div>
+            <div class="empty-state" id="empty-results" hidden>
+              <span class="empty-glyph" aria-hidden="true">⌕</span>
+              <h3>No records match this search.</h3>
+              <p>Broaden your PICO terms, select a source, or load the synthetic sample.</p>
+            </div>
+            <div class="source-truth">
+              <span class="source-truth-icon" aria-hidden="true">↗</span>
+              <p id="source-truth-copy"><strong>About these records</strong> — this is the synthetic sample set. Choose live sources above to retrieve current records from PubMed and ClinicalTrials.gov.</p>
+            </div>
+
+            <div class="explore-footer">
+              <div class="explore-footer-copy">
+                <span class="explore-footer-mark" aria-hidden="true">↗</span>
+                <span><strong>Found your core studies?</strong><small>Freeze this exact query and record set to start a separate, auditable screening workflow.</small></span>
+              </div>
+              <button class="button button--dark" id="start-review-bottom" type="button">Start a PRISMA-style review <span aria-hidden="true">→</span></button>
+            </div>
+          </section>
+
+          <section class="view" id="view-screening" aria-labelledby="screening-title" hidden>
+            <div class="page-heading page-heading--screening">
+              <div>
+                <p class="eyebrow">FROZEN REVIEW · DUAL SCREENING</p>
+                <h1 id="screening-title" tabindex="-1">Two reviewers. One traceable decision.</h1>
+                <p class="heading-copy">Screen each record independently, surface disagreement, and record a consensus decision.</p>
+              </div>
+              <div class="heading-actions">
+                <button class="button button--quiet" id="export-review" type="button">Export review JSON <span aria-hidden="true">↓</span></button>
+              </div>
+            </div>
+
+            <div class="frozen-query-bar">
+              <div class="frozen-status"><span class="frozen-lock" aria-hidden="true">▣</span><span><strong>Search frozen</strong><small id="frozen-date">Snapshot date</small></span></div>
+              <div class="frozen-summary" id="frozen-summary"></div>
+              <button class="text-button" id="return-to-scope" type="button">Back to scoping <span aria-hidden="true">↗</span></button>
+            </div>
+
+            <div class="review-notice">
+              <span class="notice-symbol" aria-hidden="true">!</span>
+              <p id="review-notice-copy"><strong>Research limitation.</strong> Verify each record against its original source. Screening decisions are local to this browser, and this workflow has not been validated for PRISMA compliance.</p>
+            </div>
+
+            <div class="prisma-panel">
+              <div class="prisma-heading">
+                <div>
+                  <p class="eyebrow" id="flow-count-label">REVIEW PROGRESS · DEMO COUNTS</p>
+                  <h2>PRISMA-style flow</h2>
+                </div>
+                <span class="not-validated">Not compliance validated</span>
+              </div>
+              <div class="flow-counts" id="flow-counts"></div>
+            </div>
+
+            <div class="screening-content">
+              <div class="screening-list-column">
+                <div class="screening-list-heading">
+                  <div>
+                    <p class="eyebrow">RECORD-BY-RECORD</p>
+                    <h2>Screening queue <span id="screening-queue-count" class="count-mark">0</span></h2>
+                  </div>
+                  <div class="reviewer-legend"><span>Reviewer A</span><span>Reviewer B</span></div>
+                </div>
+                <div class="screening-list" id="screening-list"></div>
+              </div>
+              <aside class="audit-panel" aria-labelledby="audit-title">
+                <div class="audit-panel-head">
+                  <p class="eyebrow">LOCAL ACTIVITY LOG</p>
+                  <h2 id="audit-title">Audit trail</h2>
+                  <p>Actions are timestamped in this browser; no server-side audit service is attached.</p>
+                </div>
+                <ol class="audit-list" id="audit-list"></ol>
+              </aside>
+            </div>
+          </section>
+
+          <section class="view" id="view-extraction" aria-labelledby="extraction-title" hidden>
+            <div class="page-heading page-heading--extraction">
+              <div>
+                <p class="eyebrow">QUANTITATIVE DATA · WITH PROVENANCE</p>
+                <h1 id="extraction-title" tabindex="-1">Extract the number. Keep its source.</h1>
+                <p class="heading-copy">Enter outcome-level values with a source locator and reviewer attribution beside every field.</p>
+              </div>
+              <div class="heading-actions">
+                <button class="button button--quiet" id="export-csv" type="button">Export extraction CSV <span aria-hidden="true">↓</span></button>
+              </div>
+            </div>
+
+            <div class="extraction-context" id="extraction-context"></div>
+            <div class="extraction-layout">
+              <div class="extraction-main">
+                <div class="extraction-heading-row">
+                  <div>
+                    <p class="eyebrow">STUDY-LEVEL DATA</p>
+                    <h2>Outcome extraction</h2>
+                  </div>
+                  <span class="synthetic-tag" id="extraction-data-tag"><span aria-hidden="true">✳</span> Synthetic example</span>
+                </div>
+                <form id="extraction-form">
+                  <div class="extraction-field-grid">
+                    <label class="extraction-field extraction-field--wide" for="extract-outcome">
+                      <span>Outcome</span>
+                      <input id="extract-outcome" name="outcome" required>
+                    </label>
+                    <label class="extraction-field" for="extract-timepoint">
+                      <span>Timepoint</span>
+                      <input id="extract-timepoint" name="timepoint" required>
+                    </label>
+                    <label class="extraction-field" for="extract-measure">
+                      <span>Effect measure</span>
+                      <select id="extract-measure" name="measure">
+                        <option>Risk ratio</option>
+                        <option>Odds ratio</option>
+                        <option>Mean difference</option>
+                        <option>Standardized mean difference</option>
+                        <option>Other / not reported</option>
+                      </select>
+                    </label>
+                    <label class="extraction-field" for="extract-value">
+                      <span>Effect estimate</span>
+                      <input id="extract-value" name="value" inputmode="decimal">
+                    </label>
+                    <label class="extraction-field" for="extract-ci">
+                      <span>95% confidence interval</span>
+                      <input id="extract-ci" name="ci" placeholder="Lower to upper">
+                    </label>
+                    <label class="extraction-field" for="extract-n">
+                      <span>Participants (intervention / comparator)</span>
+                      <input id="extract-n" name="sampleSize">
+                    </label>
+                    <label class="extraction-field" for="extract-units">
+                      <span>Units / coding</span>
+                      <input id="extract-units" name="units">
+                    </label>
+                  </div>
+                  <fieldset class="provenance-fieldset">
+                    <legend>PROVENANCE FOR THIS EXTRACTION</legend>
+                    <label class="extraction-field extraction-field--wide" for="extract-source">
+                      <span>Source excerpt or table reference</span>
+                      <textarea id="extract-source" name="sourceText" rows="3" required></textarea>
+                    </label>
+                    <div class="extraction-field-grid provenance-grid">
+                      <label class="extraction-field" for="extract-locator">
+                        <span>Page / table / figure</span>
+                        <input id="extract-locator" name="locator" required>
+                      </label>
+                      <label class="extraction-field" for="extract-reviewer">
+                        <span>Extracted by</span>
+                        <select id="extract-reviewer" name="reviewer">
+                          <option>Reviewer A</option>
+                          <option>Reviewer B</option>
+                        </select>
+                      </label>
+                    </div>
+                  </fieldset>
+                  <div class="extraction-form-footer">
+                    <p id="extraction-saved" role="status">Edits are stored locally in this browser.</p>
+                    <button class="button button--primary" type="submit">Save extraction</button>
+                  </div>
+                </form>
+              </div>
+              <aside class="extraction-aside">
+                <div class="aside-card">
+                  <p class="eyebrow">REVIEW CONTEXT</p>
+                  <h3>Before you pool</h3>
+                  <ul>
+                    <li>Compare outcome definitions and follow-up timepoints.</li>
+                    <li>Keep the original source locator with each value.</li>
+                    <li>Extraction is manual; verify each value and locator against the original source.</li>
+                  </ul>
+                  <p class="aside-caution">This prototype stops at extraction; it does not calculate pooled estimates or clinical recommendations.</p>
+                </div>
+                <div class="export-card">
+                  <span class="export-card-symbol" aria-hidden="true">↓</span>
+                  <strong>Take your work with you</strong>
+                  <p>Export the frozen query, screening decisions, local activity log, and extracted values as JSON.</p>
+                  <button class="text-button" id="export-review-aside" type="button">Export review file <span aria-hidden="true">→</span></button>
+                </div>
+              </aside>
+            </div>
+          </section>
+
+          <footer class="app-footer">
+            <span>Clinical Evidence Explorer <span aria-hidden="true">·</span> Local UI prototype</span>
+            <span>Live PubMed / trial retrieval <span aria-hidden="true">·</span> Scopus CSV import</span>
+          </footer>
+        </main>
+      </div>
+    </div>
+
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <dialog class="about-dialog" id="about-dialog" aria-labelledby="about-title">
+      <div class="dialog-top">
+        <span class="brand-mark" aria-hidden="true">CE</span>
+        <button class="icon-button" id="close-about" type="button" aria-label="Close about dialog">×</button>
+      </div>
+      <h2 id="about-title">A research workflow prototype.</h2>
+      <p>This research workspace searches PubMed and ClinicalTrials.gov, supports Scopus CSV imports, and provides local screening and extraction tools.</p>
+      <div class="dialog-boundary">
+        <strong>Research limits</strong>
+        <p>Searches retrieve source records, not verified evidence. The app does not provide semantic ranking, full-text access, automated extraction, multi-user review, or PRISMA compliance validation. Verify eligibility and findings against each source publication.</p>
+      </div>
+      <button class="button button--dark" id="about-done" type="button">Back to workspace</button>
+    </dialog>
+  </body>
+</html>
