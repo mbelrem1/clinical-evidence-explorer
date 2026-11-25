@@ -2,6 +2,8 @@
 
 A browser-based clinical evidence discovery and systematic-review workflow prototype, owned by Dr Mohammed Elbeltagi. It retrieves current records from PubMed and ClinicalTrials.gov and accepts Scopus CSV exports. Search, screening, and extraction are not a substitute for source verification or validated review software.
 
+**Public app:** https://mbelrem1.github.io/clinical-evidence-explorer/
+
 ## Run locally
 
 1. Install Node.js 18 or newer.
