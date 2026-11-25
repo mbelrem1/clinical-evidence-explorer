@@ -14,6 +14,16 @@ const DEFAULT_QUERY = {
   exactIntervention: false
 };
 
+const AGE_GROUPS = Object.freeze({
+  all: { minimum: null, maximum: null, label: "all ages (including children)" },
+  "0-17": { minimum: 0, maximum: 17, label: "children and adolescents (0–17 years)" },
+  "18": { minimum: 18, maximum: null, label: "adults (18 years and older)" },
+  "50": { minimum: 50, maximum: null, label: "50 years and older" },
+  "60": { minimum: 60, maximum: null, label: "60 years and older" },
+  "65": { minimum: 65, maximum: null, label: "65 years and older" },
+  "70": { minimum: 70, maximum: null, label: "70 years and older" }
+});
+
 const DEMO_RECORDS = [
   {
     id: "D-001",
@@ -232,20 +242,37 @@ function currentRecords() {
   return state.dataMode === "demo" ? DEMO_RECORDS : state.searchRecords;
 }
 
-function matchesRecord(record, query) {
-  if (record.sourceType && record.sourceType !== "demo") {
-    const minAge = Number(query.age);
-    if (Number.isFinite(minAge) && query.age !== "all") {
-      if (Number.isFinite(record.maxAge) && record.maxAge < minAge) return false;
-      if (query.strictAge && Number.isFinite(record.minAge) && record.minAge < minAge) return false;
-    }
-    return true;
-  }
+function selectedAgeGroup(selection) {
+  return AGE_GROUPS[selection] ?? AGE_GROUPS.all;
+}
 
-  const minAge = Number(query.age);
-  if (Number.isFinite(minAge) && query.age !== "all") {
-    if (record.maxAge < minAge) return false;
-    if (query.strictAge && record.minAge < minAge) return false;
+function matchesAgeGroup(record, query) {
+  const { minimum, maximum } = selectedAgeGroup(query.age);
+  if (minimum === null && maximum === null) return true;
+
+  const minKnown = Number.isFinite(record.minAge);
+  const maxKnown = Number.isFinite(record.maxAge);
+  if (minimum !== null && maxKnown && record.maxAge < minimum) return false;
+  if (maximum !== null && minKnown && record.minAge > maximum) return false;
+  if (query.strictAge) {
+    if (minimum !== null && minKnown && record.minAge < minimum) return false;
+    if (maximum !== null && maxKnown && record.maxAge > maximum) return false;
+  }
+  return true;
+}
+
+function ageGroupNeedsReview(record, query) {
+  const { minimum, maximum } = selectedAgeGroup(query.age);
+  if (minimum === null && maximum === null) return false;
+  if (!Number.isFinite(record.minAge) || !Number.isFinite(record.maxAge)) return true;
+  return (minimum !== null && record.minAge < minimum)
+    || (maximum !== null && record.maxAge > maximum);
+}
+
+function matchesRecord(record, query) {
+  if (!matchesAgeGroup(record, query)) return false;
+  if (record.sourceType && record.sourceType !== "demo") {
+    return true;
   }
 
   return fieldMatches(query.population, [record.condition, record.population, record.title])
@@ -261,18 +288,7 @@ function getVisibleRecords() {
 }
 
 function isManualReview(record, query = state.query) {
-  if (record.sourceType && record.sourceType !== "demo") {
-    if (record.manualReason) return true;
-    const threshold = Number(query.age);
-    if (query.age === "all" || !Number.isFinite(threshold)) return false;
-    return !Number.isFinite(record.minAge)
-      || !Number.isFinite(record.maxAge)
-      || record.minAge < threshold
-      || record.maxAge < threshold;
-  }
-  const threshold = Number(query.age);
-  const ageReview = query.age !== "all" && !query.strictAge && record.minAge < threshold && record.maxAge >= threshold;
-  return Boolean(record.manualReason || ageReview);
+  return Boolean(record.manualReason || ageGroupNeedsReview(record, query));
 }
 
 function readForm() {
@@ -969,7 +985,7 @@ function renderSearch() {
   elements.emptyResults.hidden = records.length > 0;
   elements.studyList.hidden = records.length === 0;
 
-  const ageLabel = state.query.age === "all" ? "all adult ages" : `${state.query.age}+ years`;
+  const ageLabel = selectedAgeGroup(state.query.age).label;
   if (state.searchBusy) {
     elements.resultsSummary.textContent = "Searching selected sources…";
   } else if (state.dataMode === "live" && state.searchMeta) {
@@ -1158,7 +1174,7 @@ function frozenQueryLabel(query) {
     query.intervention && `I: ${query.intervention}`,
     query.comparator && `C: ${query.comparator}`,
     query.outcome && `O: ${query.outcome}`,
-    `Age: ${query.age === "all" ? "all adults" : `${query.age}+ years`}`,
+    `Age: ${selectedAgeGroup(query.age).label}`,
     query.strictAge ? "exact age" : "mixed age flagged"
   ].filter(Boolean);
   return parts.join("  ·  ");

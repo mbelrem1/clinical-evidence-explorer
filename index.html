@@ -148,7 +148,9 @@ FORM: Evidence Timetable, an evidence-first operating surface derived from pocke
                   <label class="select-field" for="age-filter">
                     <span class="option-label">Age group</span>
                     <select id="age-filter" name="age">
-                      <option value="all">All adults</option>
+                      <option value="all">All ages (including children)</option>
+                      <option value="0-17">Children and adolescents (0–17 years)</option>
+                      <option value="18">Adults (18 years and older)</option>
                       <option value="50">50 years and older</option>
                       <option value="60">60 years and older</option>
                       <option value="65" selected>65 years and older</option>
@@ -158,7 +160,7 @@ FORM: Evidence Timetable, an evidence-first operating surface derived from pocke
                   <label class="toggle-control" for="strict-age">
                     <input id="strict-age" type="checkbox">
                     <span class="toggle-track" aria-hidden="true"><span></span></span>
-                    <span><strong>Exact age match</strong><small>Flag mixed-age cohorts for review when off</small></span>
+                    <span><strong>Exact age group</strong><small>Keep mixed-age cohorts for review when off</small></span>
                   </label>
                   <label class="toggle-control toggle-control--compact" for="exact-intervention">
                     <input id="exact-intervention" type="checkbox">

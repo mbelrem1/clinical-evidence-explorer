@@ -22,7 +22,7 @@ Searches use entered PICO concepts, not semantic ranking. The app does not searc
 
 ## Included workflow
 
-- Editable PICO query with age and exact-intervention controls.
+- Editable PICO query with all-ages, children/adolescents (0–17), adult (18+), and older-adult age groups, plus exact age-group and intervention controls.
 - Live PubMed and ClinicalTrials.gov retrieval, page-by-page loading, and deduplication by PMID, NCT ID, DOI, and Scopus EID.
 - Scopus CSV import with record identifiers, abstract, year, and source links when included in the export.
 - Manual-review flags for age and source details that need verification.
