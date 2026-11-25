@@ -181,21 +181,21 @@ FORM: Evidence Timetable, an evidence-first operating surface derived from pocke
                     <span class="toggle-track" aria-hidden="true"><span></span></span>
                     <span><strong>Exact intervention</strong><small>Require a phrase match</small></span>
                   </label>
-                  <div class="source-options" aria-label="Live databases to search">
+                  <div class="source-options" role="group" aria-label="Search and import research sources">
                     <span class="option-label">Search sources</span>
                     <label><input id="source-pubmed" type="checkbox" checked> PubMed</label>
                     <label><input id="source-trials" type="checkbox" checked> ClinicalTrials.gov</label>
+                    <button class="button button--quiet scopus-import-button" id="import-scopus-csv" type="button">Import Scopus CSV</button>
                   </div>
+                  <input class="sr-only" id="scopus-import" type="file" accept=".csv,text/csv" tabindex="-1" aria-hidden="true">
                   <button class="button button--primary search-submit" id="search-live" type="submit">
                     <span aria-hidden="true">⌕</span> Search live sources
                   </button>
-                  <label class="button button--quiet scopus-import-button" for="scopus-import">Import Scopus CSV</label>
-                  <input class="sr-only" id="scopus-import" type="file" accept=".csv,text/csv">
                   <button class="text-button demo-load-button" id="load-demo-data" type="button">Try sample data</button>
                 </div>
                 <div class="search-method-note">
                   <span class="note-mark" aria-hidden="true">i</span>
-                  <span>Live source queries use the entered PICO concepts. Age eligibility and study relevance require human verification; no semantic ranking or automatic extraction is used.</span>
+                  <span>PubMed and ClinicalTrials.gov are searched live. Scopus is added by importing a CSV export, not through a live API. Age eligibility and study relevance require human verification; no semantic ranking or automatic extraction is used.</span>
                   <span class="method-token">DIRECT SOURCE SEARCH</span>
                 </div>
               </form>

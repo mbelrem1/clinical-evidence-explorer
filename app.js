@@ -173,6 +173,7 @@ const elements = {
   exactIntervention: document.getElementById("exact-intervention"),
   sourcePubMed: document.getElementById("source-pubmed"),
   sourceTrials: document.getElementById("source-trials"),
+  scopusImportButton: document.getElementById("import-scopus-csv"),
   searchButton: document.getElementById("search-live"),
   scopusImport: document.getElementById("scopus-import"),
   loadDemoButton: document.getElementById("load-demo-data"),
@@ -1677,6 +1678,7 @@ function bindEvents() {
 
   document.getElementById("reset-search").addEventListener("click", resetSearch);
   elements.loadMoreButton.addEventListener("click", () => { void loadMoreResults(); });
+  elements.scopusImportButton.addEventListener("click", () => elements.scopusImport.click());
   elements.scopusImport.addEventListener("change", (event) => { void importScopusFile(event); });
   document.getElementById("freeze-review").addEventListener("click", freezeReview);
   document.getElementById("start-review-bottom").addEventListener("click", freezeReview);
