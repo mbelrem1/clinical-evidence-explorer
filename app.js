@@ -10,6 +10,8 @@ const DEFAULT_QUERY = {
   comparator: "Usual care",
   outcome: "Hospitalization or 6-minute walk distance",
   age: "65",
+  ageMinimum: null,
+  ageMaximum: null,
   strictAge: false,
   exactIntervention: false
 };
@@ -164,6 +166,9 @@ const elements = {
   comparator: document.getElementById("pico-comparator"),
   outcome: document.getElementById("pico-outcome"),
   age: document.getElementById("age-filter"),
+  ageRangeFields: document.getElementById("age-range-fields"),
+  ageMinimum: document.getElementById("age-minimum"),
+  ageMaximum: document.getElementById("age-maximum"),
   strictAge: document.getElementById("strict-age"),
   exactIntervention: document.getElementById("exact-intervention"),
   sourcePubMed: document.getElementById("source-pubmed"),
@@ -242,12 +247,20 @@ function currentRecords() {
   return state.dataMode === "demo" ? DEMO_RECORDS : state.searchRecords;
 }
 
-function selectedAgeGroup(selection) {
-  return AGE_GROUPS[selection] ?? AGE_GROUPS.all;
+function selectedAgeGroup(query) {
+  if (query.age !== "custom") return AGE_GROUPS[query.age] ?? AGE_GROUPS.all;
+
+  const { ageMinimum: minimum, ageMaximum: maximum } = query;
+  if (!Number.isInteger(minimum) || !Number.isInteger(maximum)
+    || minimum < 0 || maximum > 120 || minimum > maximum) {
+    return { minimum: null, maximum: null, label: "custom age range" };
+  }
+  return { minimum, maximum, label: `${minimum}–${maximum} years` };
 }
 
 function matchesAgeGroup(record, query) {
-  const { minimum, maximum } = selectedAgeGroup(query.age);
+  const { minimum, maximum } = selectedAgeGroup(query);
+  if (query.age === "custom" && (minimum === null || maximum === null)) return false;
   if (minimum === null && maximum === null) return true;
 
   const minKnown = Number.isFinite(record.minAge);
@@ -262,7 +275,7 @@ function matchesAgeGroup(record, query) {
 }
 
 function ageGroupNeedsReview(record, query) {
-  const { minimum, maximum } = selectedAgeGroup(query.age);
+  const { minimum, maximum } = selectedAgeGroup(query);
   if (minimum === null && maximum === null) return false;
   if (!Number.isFinite(record.minAge) || !Number.isFinite(record.maxAge)) return true;
   return (minimum !== null && record.minAge < minimum)
@@ -298,9 +311,35 @@ function readForm() {
     comparator: elements.comparator.value.trim(),
     outcome: elements.outcome.value.trim(),
     age: elements.age.value,
+    ageMinimum: elements.ageMinimum.value === "" ? null : Number(elements.ageMinimum.value),
+    ageMaximum: elements.ageMaximum.value === "" ? null : Number(elements.ageMaximum.value),
     strictAge: elements.strictAge.checked,
     exactIntervention: elements.exactIntervention.checked
   };
+}
+
+function updateAgeRangeFields() {
+  const customRange = elements.age.value === "custom";
+  elements.ageRangeFields.hidden = !customRange;
+  elements.ageMinimum.required = customRange;
+  elements.ageMaximum.required = customRange;
+  const hasBothBounds = elements.ageMinimum.value !== "" && elements.ageMaximum.value !== "";
+  elements.ageMaximum.setCustomValidity(
+    customRange && hasBothBounds && Number(elements.ageMaximum.value) < Number(elements.ageMinimum.value)
+      ? "To age must be equal to or greater than From age."
+      : ""
+  );
+}
+
+function updateAgeSelection() {
+  updateAgeRangeFields();
+  if (state.review) return;
+  state.query = readForm();
+  state.recordIds = currentRecords()
+    .filter((record) => matchesRecord(record, state.query))
+    .map((record) => record.id);
+  persistState();
+  renderSearch();
 }
 
 function fillForm(query) {
@@ -309,6 +348,9 @@ function fillForm(query) {
   elements.comparator.value = query.comparator ?? "";
   elements.outcome.value = query.outcome ?? "";
   elements.age.value = query.age ?? "all";
+  elements.ageMinimum.value = query.ageMinimum ?? "";
+  elements.ageMaximum.value = query.ageMaximum ?? "";
+  updateAgeRangeFields();
   elements.strictAge.checked = Boolean(query.strictAge);
   elements.exactIntervention.checked = Boolean(query.exactIntervention);
 }
@@ -985,7 +1027,7 @@ function renderSearch() {
   elements.emptyResults.hidden = records.length > 0;
   elements.studyList.hidden = records.length === 0;
 
-  const ageLabel = selectedAgeGroup(state.query.age).label;
+  const ageLabel = selectedAgeGroup(state.query).label;
   if (state.searchBusy) {
     elements.resultsSummary.textContent = "Searching selected sources…";
   } else if (state.dataMode === "live" && state.searchMeta) {
@@ -1174,7 +1216,7 @@ function frozenQueryLabel(query) {
     query.intervention && `I: ${query.intervention}`,
     query.comparator && `C: ${query.comparator}`,
     query.outcome && `O: ${query.outcome}`,
-    `Age: ${selectedAgeGroup(query.age).label}`,
+    `Age: ${selectedAgeGroup(query).label}`,
     query.strictAge ? "exact age" : "mixed age flagged"
   ].filter(Boolean);
   return parts.join("  ·  ");
@@ -1628,6 +1670,10 @@ function bindEvents() {
     state.query = readForm();
     persistState();
   });
+  elements.age.addEventListener("change", updateAgeSelection);
+  elements.ageMinimum.addEventListener("input", updateAgeSelection);
+  elements.ageMaximum.addEventListener("input", updateAgeSelection);
+  elements.strictAge.addEventListener("change", updateAgeSelection);
 
   document.getElementById("reset-search").addEventListener("click", resetSearch);
   elements.loadMoreButton.addEventListener("click", () => { void loadMoreResults(); });

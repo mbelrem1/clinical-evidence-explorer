@@ -155,8 +155,22 @@ FORM: Evidence Timetable, an evidence-first operating surface derived from pocke
                       <option value="60">60 years and older</option>
                       <option value="65" selected>65 years and older</option>
                       <option value="70">70 years and older</option>
+                      <option value="custom">Custom age range…</option>
                     </select>
                   </label>
+                  <div class="age-range-fields" id="age-range-fields" hidden role="group" aria-labelledby="age-range-label" aria-describedby="age-range-help">
+                    <span class="option-label age-range-label" id="age-range-label">Custom age range (years)</span>
+                    <label class="age-range-bound" for="age-minimum">
+                      <span>From</span>
+                      <input id="age-minimum" name="ageMinimum" type="number" min="0" max="120" step="1" inputmode="numeric" aria-describedby="age-range-help">
+                    </label>
+                    <span class="age-range-separator" aria-hidden="true">to</span>
+                    <label class="age-range-bound" for="age-maximum">
+                      <span>To</span>
+                      <input id="age-maximum" name="ageMaximum" type="number" min="0" max="120" step="1" inputmode="numeric" aria-describedby="age-range-help">
+                    </label>
+                    <small id="age-range-help">Enter both whole-number ages, 0 to 120; limits are inclusive.</small>
+                  </div>
                   <label class="toggle-control" for="strict-age">
                     <input id="strict-age" type="checkbox">
                     <span class="toggle-track" aria-hidden="true"><span></span></span>
